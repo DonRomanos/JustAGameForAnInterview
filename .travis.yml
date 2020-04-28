@@ -1,0 +1,72 @@
+linux: &linux
+  os: linux
+  dist: xenial
+  python: "3.7"
+
+osx: &osx
+  os: osx
+  osx_image: xcode11.3
+  language: shell
+
+matrix:
+  include:
+    - <<: *linux
+      name: "Linux"
+      env: CONAN_GCC_VERSIONS=9 CONAN_DOCKER_IMAGE=conanio/gcc9
+      language: python
+      services:
+        - docker
+    - <<: *linux
+      name: "Coverage"
+      env: CC=gcc-9 CXX=g++-9 GCOV=gcov-9 VARIANT=coverage CXXFLAGS="--coverage -O0"
+      language: python
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-9
+            - gcc-9
+            - libstdc++-9-dev
+    - <<: *osx
+      name: "MacOS"
+      env: CONAN_CLANG_VERSIONS=9 CONAN_DOCKER_IMAGE=conanio/clang9
+
+before_install:
+  - mkdir $HOME/usr
+  - export PATH="$HOME/usr/bin:$PATH"
+  - if [ "${TRAVIS_OS_NAME}" == "linux" ]; then (
+    wget https://cmake.org/files/LatestRelease/cmake-3.17.0-Linux-x86_64.sh &&
+    chmod +x cmake-3.17.0-Linux-x86_64.sh &&
+    ./cmake-3.17.0-Linux-x86_64.sh --prefix=$HOME/usr --exclude-subdir --skip-license
+    ); fi
+  - cmake --version
+
+install:
+  - pip3 install --upgrade pip
+  - pip3 install -U conan_package_tools
+  - conan user
+  - cmake --version
+
+script:
+  - if [ "${TRAVIS_JOB_NAME}" == "Coverage" ]; then (
+      mkdir build && cd build &&
+      conan install .. -b missing -s compiler=gcc -s compiler.version=9 -s compiler.libcxx=libstdc++11 -s compiler.cppstd=20 &&
+      cmake -G "Unix Makefiles" -D CMAKE_MODULE_PATH=$PWD -D CMAKE_C_COMPILER=gcc-9 -D CMAKE_CXX_COMPILER=g++-9 -D CMAKE_BUILD_TYPE=DEBUG .. &&
+      cmake --build . && ctest . &&
+      bash <(curl -s https://codecov.io/bash) -x "${GCOV}"
+    ); fi
+  - if [ "${TRAVIS_OS_NAME}" == "osx" ]; then (
+      mkdir build && cd build &&
+      conan install .. -b missing &&
+      cmake -DCMAKE_BUILD_TYPE=RELEASE -D CMAKE_MODULE_PATH=$PWD .. &&
+      cmake --build . && ctest .
+    ); fi
+  - if [ "${TRAVIS_JOB_NAME}" == "Linux" ]; then (
+      python3 .travis_build.py
+    ); fi
+
+notifications:
+  on_success: change
+  on_failure: always
+  on_start: false
