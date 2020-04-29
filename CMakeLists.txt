@@ -20,7 +20,7 @@ target_compile_options(${PROJECT_NAME} PRIVATE
     $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
         -Wall -Werror -pedantic-errors -Wextra -Wconversion -Wsign-conversion>
     $<$<CXX_COMPILER_ID:MSVC>:
-        /WX /W4>
+        /WX /W4 /std:c++latest>
 )
 
 ######################################################################
@@ -33,6 +33,7 @@ if( BUILD_TESTS)
         src/tests.cpp
         src/console_input.cpp
         src/simulation.cpp
+        src/output.cpp
     )
 
     target_include_directories(${PROJECT_NAME}_Tests PRIVATE
@@ -43,8 +44,10 @@ if( BUILD_TESTS)
     )
 
     target_compile_options(${PROJECT_NAME}_Tests PRIVATE
-        $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>>:
-            -Wno-gnu-zero-variadic-macro-arguments>
+        $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
+            -Wall -Werror -pedantic-errors -Wextra -Wconversion -Wsign-conversion>
+        $<$<CXX_COMPILER_ID:MSVC>:
+            /WX /W4 /std:c++latest>
     )
 
     include(GoogleTest)

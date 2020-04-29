@@ -27,7 +27,7 @@ std::string input::AsyncProvider::poll_keyboard()
 	using namespace std::chrono_literals;
 
 	std::string result;
-	if (next_line.wait_for(0ms) == std::future_status::ready)
+	if (next_line.wait_for(0ms) == std::future_status::ready) // there is a proposal for properly checking the state of a future but not yet available
 	{
 		result = next_line.get();
 		next_line = start_reading_next_line(source);

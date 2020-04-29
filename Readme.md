@@ -72,3 +72,6 @@ Possibilities I see:
 
 Running a background thread for input or output, requires multi threading and guarding against race conditions.
 Polling the input periodically, however this is not easily done using standard C++ facilities.
+
+An other question I ask myself is if I should follow the traditional object oriented approach or go more in a functional direction.
+
