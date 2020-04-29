@@ -4,12 +4,12 @@
 
 namespace input
 {
-	class Console : public input::Provider
+	class AsyncProvider : public input::Provider
 	{
 	public:
-		explicit Console(std::istream& source);
+		explicit AsyncProvider(std::istream& source);
 
-		virtual std::string poll_keyboard() override;
+		[[nodiscard]] virtual std::string poll_keyboard() override;
 
 	private:
 		std::istream& source;

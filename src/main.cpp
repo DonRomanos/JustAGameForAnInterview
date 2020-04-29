@@ -9,10 +9,13 @@ int main(/*int argc, char** argv*/)
 {
     using namespace std::chrono_literals;
 
-    auto input_provider = std::make_unique<input::Console>(std::cin);
+    auto input_provider = std::make_unique<input::AsyncProvider>(std::cin);
 
-
-    std::cout << "Starting Game ..." << std::endl;
+    std::cout << "Starting Game ...\n";
+    std::cout << "Type and press enter to attack:\n";
+    std::cout << "\tAttack Orc\n";
+    std::cout << "\tAttack Dragon\n\n";
+    std::cout << std::string(80, '*') << std::endl;
 
     while(true)
     {

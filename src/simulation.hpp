@@ -28,10 +28,12 @@ namespace simulation
 		Player player;
 	};
 
+
 	class Engine
 	{
 	public:
-		Gamestate AdvanceSimulation(const Gamestate&);
+		void AdvanceGamestate(Gamestate&);
+	
 	private:
 		std::chrono::steady_clock::time_point last_execution;
 	};

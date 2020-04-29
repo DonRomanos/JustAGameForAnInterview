@@ -17,12 +17,12 @@ namespace
 	}
 }
 
-input::Console::Console(std::istream& in) : source(in)
+input::AsyncProvider::AsyncProvider(std::istream& in) : source(in)
 {
 	next_line = start_reading_next_line(in);
 }
 
-std::string input::Console::poll_keyboard()
+std::string input::AsyncProvider::poll_keyboard()
 {
 	using namespace std::chrono_literals;
 
