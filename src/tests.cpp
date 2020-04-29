@@ -1,34 +1,23 @@
-#include "challenge.hpp"
-#include "reference.hpp"
-
 #include "gtest/gtest.h"
 
-template <typename T>
-class Some_typed_Test : public ::testing::Test
+#include "console_input.hpp"
+
+#include <strstream>
+
+TEST(Input, Input_should_react_only_after_pressing_enter)
 {
+    using namespace std::chrono_literals;
 
-};
-TYPED_TEST_CASE_P(Some_typed_Test);
+    auto sample_stream = std::stringstream();
+    auto to_test = input::Console(sample_stream);
 
-/***************************************************************/
-TYPED_TEST_P(Some_typed_Test, Should_Succeed) {
-  // Inside a test, refer to TypeParam to get the type parameter.
-  // TypeParam n = 0;
-  SUCCEED();
+    sample_stream << "NotYet";
+    EXPECT_TRUE(to_test.poll_keyboard().empty());
+
+    sample_stream << "Enter" << std::endl;
+    std::this_thread::sleep_for(10ms);
+    EXPECT_EQ(to_test.poll_keyboard(), "NotYetEnter");
 }
-
-// Register all test names, e.g. Should_Succeed
-REGISTER_TYPED_TEST_CASE_P(Some_typed_Test,
-                            Should_Succeed);
-
-// Now we can instantiate it with our types.
-#ifdef BUILD_REFERENCE
-    using TypesToTest = ::testing::Types<challenge::SomeClass, reference::SomeClass>;
-#else
-    using TypesToTest = ::testing::Types<reference::SomeClass>;
-#endif
-
-INSTANTIATE_TYPED_TEST_CASE_P(WhateverNameYouWant, Some_typed_Test, TypesToTest);
 
 TEST(GtestDependency, Should_Compile_if_gtest_was_found)
 {

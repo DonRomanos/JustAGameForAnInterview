@@ -4,7 +4,7 @@ class StringChallenge(ConanFile):
     name = 'Challenge_Template'
     version = '0.1'
     settings = 'os', 'arch', 'compiler', 'build_type'
-    requires = "gtest/1.8.1@bincrafters/stable", "benchmark/1.5.0"
+    requires = "gtest/1.8.1@bincrafters/stable"
     generators = "cmake_find_package" # can be updated to cmake_find_package_multi if necessary
     exports = ["LICENSE.md"]
     exports_sources = ["src/*","CMakeLists.txt"]
