@@ -47,7 +47,7 @@ if( BUILD_TESTS)
 
     target_compile_options(${PROJECT_NAME}_Tests PRIVATE
         $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
-            -Wall -Werror -pedantic-errors -Wextra -Wconversion -Wsign-conversion -std=c++2a>
+            -Wall -Werror -pedantic-errors -Wextra -Wconversion -Wsign-conversion -std=c++2a -Wno-missing-field-initializers>
         $<$<CXX_COMPILER_ID:MSVC>:
             /WX /W4 /std:c++latest>
     )

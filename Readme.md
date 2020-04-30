@@ -1,8 +1,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 <a href="https://travis-ci.com/DonRomanos/JustAGameForAnInterview">![Build Status:](https://travis-ci.com/DonRomanos/JustAGameForAnInterview.svg?label=linux/osx)</a>
 <a href="https://ci.appveyor.com/project/DonRomanos/JustAGameForAnInterview" target="_blank">![Build Status:](https://ci.appveyor.com/api/projects/status/github/donromanos/JustAGameForAnInterview?svg=true&label=windows)</a>
-[![codecov](https://codecov.io/gh/donromanos/Challenge_Template/branch/master/graph/badge.svg)](https://codecov.io/gh/donromanos/Challenge_Template/)
-<a href="https://godbolt.org">![Try it online](https://img.shields.io/badge/try%20it-online-blue.svg)</a>
+[![codecov](https://codecov.io/gh/donromanos/JustAGameForAnInterview/branch/master/graph/badge.svg)](https://codecov.io/gh/donromanos/JustAGameForAnInterview/)
 
 # A Simple Console Game for a Job Interview
 
