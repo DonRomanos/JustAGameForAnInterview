@@ -84,12 +84,12 @@ TEST(Input, Typing_Attack_Orc_should_produce_correct_event)
     auto sample_stream = std::stringstream();
     auto to_test = input::Provider(sample_stream);
 
-    sample_stream << "Attack ";
+    sample_stream << "attack ";
     EXPECT_FALSE(to_test.poll_keyboard().has_value());
 
-    sample_stream << "Orc" << std::endl;
+    sample_stream << "orc" << std::endl;
     std::this_thread::sleep_for(10ms);
-    EXPECT_EQ(to_test.poll_keyboard()->target, "Orc");
+    EXPECT_EQ(to_test.poll_keyboard()->target, "orc");
 }
 
 // Had some Problems with the conan cmake_find_package generator, 
