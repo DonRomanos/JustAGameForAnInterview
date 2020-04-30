@@ -73,5 +73,18 @@ Possibilities I see:
 Running a background thread for input or output, requires multi threading and guarding against race conditions.
 Polling the input periodically, however this is not easily done using standard C++ facilities.
 
-An other question I ask myself is if I should follow the traditional object oriented approach or go more in a functional direction.
+### First Try
+
+Tryed with a functional approach storing the gamestate and advancing it every step. Instead of using objects and dynamic dispatch. Makes the tests easier to write I think and can also make the code simpler.
+
+I used c++11 async facilities for handling input and output simultaneously, however with my current implementation using getline in a background thread whatever the player types will be scrambled with the output of the game.
+
+Problems that I would fix with more time:
+
+* Interleaved input / output: switch to querying available characters, store them if there is an output erase everything in the current line and afterwards print whatever the player had written in the next line and continue processing his input. This requires manually assemblying the message.
+* Different handling of player and creatures: The only difference is the trigger of the attack, so I would unify the behaviour getting rid of a lot of ifs and only handle the trigger individual for each of them (I would refactor input for this).
+
+These are the main points.
+
+Time spent: 3-4 hours
 
