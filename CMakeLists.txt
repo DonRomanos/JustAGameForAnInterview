@@ -11,14 +11,16 @@ target_include_directories(${PROJECT_NAME} PRIVATE src/)
 
 target_sources(${PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/console_input.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/simulation.cpp)
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/input_provider.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/simulation.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/output.cpp
+)
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 
 target_compile_options(${PROJECT_NAME} PRIVATE
     $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
-        -Wall -Werror -pedantic-errors -Wextra -Wconversion -Wsign-conversion>
+        -Wall -Werror -pedantic-errors -Wextra -Wconversion -Wsign-conversion -std=c++2a>
     $<$<CXX_COMPILER_ID:MSVC>:
         /WX /W4 /std:c++latest>
 )
@@ -31,7 +33,7 @@ if( BUILD_TESTS)
     
     target_sources(${PROJECT_NAME}_Tests PRIVATE 
         src/tests.cpp
-        src/console_input.cpp
+        src/input_provider.cpp
         src/simulation.cpp
         src/output.cpp
     )
@@ -45,7 +47,7 @@ if( BUILD_TESTS)
 
     target_compile_options(${PROJECT_NAME}_Tests PRIVATE
         $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:
-            -Wall -Werror -pedantic-errors -Wextra -Wconversion -Wsign-conversion>
+            -Wall -Werror -pedantic-errors -Wextra -Wconversion -Wsign-conversion -std=c++2a>
         $<$<CXX_COMPILER_ID:MSVC>:
             /WX /W4 /std:c++latest>
     )

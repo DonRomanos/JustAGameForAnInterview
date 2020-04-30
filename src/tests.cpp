@@ -1,4 +1,4 @@
-#include "console_input.hpp"
+#include "input_provider.hpp"
 #include "simulation.hpp"
 
 #include "gtest/gtest.h"
@@ -77,19 +77,19 @@ TEST(Simulation, Creatures_attack_after_specified_time)
     EXPECT_EQ(state.player.health, 1);
 }
 
-TEST(Input, Input_should_react_only_after_pressing_enter)
+TEST(Input, Typing_Attack_Orc_should_produce_correct_event)
 {
     using namespace std::chrono_literals;
 
     auto sample_stream = std::stringstream();
-    auto to_test = input::AsyncProvider(sample_stream);
+    auto to_test = input::Provider(sample_stream);
 
-    sample_stream << "NotYet";
-    EXPECT_TRUE(to_test.poll_keyboard().empty());
+    sample_stream << "Attack ";
+    EXPECT_FALSE(to_test.poll_keyboard().has_value());
 
-    sample_stream << "Enter" << std::endl;
+    sample_stream << "Orc" << std::endl;
     std::this_thread::sleep_for(10ms);
-    EXPECT_EQ(to_test.poll_keyboard(), "NotYetEnter");
+    EXPECT_EQ(to_test.poll_keyboard()->target, "Orc");
 }
 
 // Had some Problems with the conan cmake_find_package generator, 

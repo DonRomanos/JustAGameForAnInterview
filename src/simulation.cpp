@@ -19,7 +19,7 @@ namespace
 			if (creature.current_cooldown < elapsed_time)
 			{
 				creature.current_cooldown = creature.attack_cooldown;
-				events.emplace_back(core::DamageEvent{ .target = "player", .damage = creature.damage });
+				events.emplace_back(core::DamageEvent{.source = creature.name,  .target = "player", .damage = creature.damage });
 			}
 			else
 			{
@@ -90,5 +90,5 @@ void simulation::Engine::advance_gamestate(core::Gamestate& current_state, std::
 
 	handle_damage_events(current_state, events);
 
-	
+	last_execution = std::chrono::steady_clock::now();
 }

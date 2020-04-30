@@ -31,13 +31,13 @@ namespace core
 
 	struct DamageEvent
 	{
+		std::string source;
 		std::string target;
 		int damage;
 	};
 
 	struct Gamestate
 	{
-		std::vector<DamageEvent> current_events;
 		std::vector<Creature> creatures;
 		Player player;
 		GameResult status = GameResult::Running;
