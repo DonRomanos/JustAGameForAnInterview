@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Evolution of a game using modern C++ Features</title>
+    <meta charset="utf-8">
+    <style>
+      @import url(https://fonts.googleapis.com/css?family=Yanone+Kaffeesatz);
+      @import url(https://fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic);
+      @import url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
+
+      body { font-family: 'Droid Serif'; }
+      h1, h2, h3 {
+        font-family: 'Yanone Kaffeesatz';
+        font-weight: normal;
+      }
+      .remark-code, .remark-inline-code { font-family: 'Ubuntu Mono'; }
+    </style>
+  </head>
+  <body>
+    <textarea id="source">
+
+class: center, middle
+
+# Evolution of a game using modern C++ Features
+
+---
+
+# Recap
+
+* The player controls a hero who fights two monsters: an orc and a dragon.
+* The hero has 40 health points, the orc has 7, the dragon has 20.
+* Every 1400ms, the orc attacks the hero for 1 damage, which means that the hero loses 1 health point.
+* Every 2200ms, the dragon attacks the hero for 3 damage.
+* Each time the player types "attack orc" or "attack dragon", the hero attacks the corresponding monster for 2 damage.
+* If the orc's or dragon's health points are reduced to zero, it is dead and can neither attack nor be attacked.
+* If both monsters die, the player wins the game.
+* If the hero's health points are reduced to zero, the player loses the game.
+
+---
+
+# First Try 
+
+.center[![First Try - Architecture](./old_architecture.svg)]
+
+---
+
+```cpp
+struct Creature
+{
+  const std::string name;
+  const std::chrono::milliseconds attack_cooldown;
+  const int damage;
+
+  int health;
+  std::chrono::milliseconds current_cooldown;
+};
+
+struct Player
+{
+  int health;
+  std::string current_input;
+};
+
+struct DamageEvent
+{
+  std::string source;
+  std::string target;
+  int damage;
+};
+
+struct Gamestate
+{
+  std::vector<Creature> creatures;
+  Player player;
+  GameResult status = GameResult::Running;
+};
+```
+
+---
+# Issues
+
+```cpp
+if (target_name == "player")
+{
+  return state.player.health;
+}
+else
+{
+  if (auto target = std::find_if(std::begin(state.creatures), std::end(state.creatures), [target_name](const auto& creature) {return creature.name == target_name; });
+    target != std::end(state.creatures))
+  {
+    return target->health;
+  }
+}
+```
+---
+
+# Issues
+
+```cpp
+std::future<std::string> start_reading_next_line(std::istream& in)
+	{
+		return std::async(std::launch::async, [&in]()
+			{
+				std::string result;
+				std::getline(in, result);
+				return result;
+			}
+		);
+	}
+```
+
+---
+
+# An Idea
+
+Fundamental Theorem of Software Engineering: 
+
+--
+
+.center["We can solve any problem by introducing an extra level of indirection."]
+
+---
+
+# Lets Refactor
+
+.center[![First Try - Architecture](./new_architecture.svg)]
+
+---
+
+# Where to start?
+
+A unit test which does not compile...
+
+```cpp
+TEST(Triggers, Trigger_system_should_only_generate_events_from_triggers_whose_conditions_are_met)
+{
+    auto trigger_system = EventFactory();
+    auto state = core::ActiveState();
+
+    trigger_system.add_trigger(`Every(1000ms).aslong_as(is_alive(Orc)).generate_event(DealDamageEvent{.source = Orc, .target = Player, .damage = 2})`);
+    trigger_system.add_trigger(`Every(1000ms).generate_event(DealDamageEvent{ .source = Dragon, .target = Player, .damage = 3 })`);
+    trigger_system.add_trigger(`OnPhrase("Attack Orc"sv).aslong_as(game_is_running).generate_event(DealDamageEvent{ .source = Player, .target = Orc, .damage = 2 })`);
+
+    trigger_system.execute(state, 1000ms);
+
+    EXPECT_FALSE(state.current_events.empty());
+}
+```
+---
+
+# Lets start with the Triggers
+
+```cpp
+class InputTrigger
+{
+public:
+  explicit InputTrigger(std::string_view phrase, std::istream& in = std::cin);
+
+  bool executes(core::ActiveState& state);
+private:
+  std::istream& source;
+  std::string trigger_phrase;
+};
+
+
+class TimedTrigger
+{
+public:
+  explicit TimedTrigger(const std::chrono::milliseconds cycle);
+  TimedTrigger(const std::chrono::milliseconds cycle, const std::chrono::milliseconds counter);
+
+  bool executes(const std::chrono::milliseconds elapsed_time);
+private:
+  std::chrono::milliseconds cycle_duration;
+  std::chrono::milliseconds counter;
+};
+```
+
+---
+# Something to Execute the Triggers
+
+```cpp
+class EventFactory : public core::System
+{
+public:
+  virtual void execute(core::ActiveState& state, const std::chrono::milliseconds elapsed_time) override;
+  
+  void add_trigger(`Everything a Trigger needs`&& to_add);
+  
+private:
+  std::vector<`Everything a Trigger needs`> triggers;
+};
+```
+---
+# What does a Trigger need?
+
+```cpp
+  `Every(1000ms)`.generate_event(`DealDamageEvent`{ .source = Dragon, .target = Player, .damage = 3 });
+  `OnPhrase("Attack Orc"sv)`.`aslong_as(game_is_running)`.generate_event(`DealDamageEvent`{ .source = Player, .target = Orc, .damage = 2 });
+```
+
+--
+Lets put the Info together
+
+```cpp
+struct TriggerInfo
+{
+  Trigger trigger;
+  Condition execution_condition;
+  core::Event generated_event;
+};
+```
+--
+But Triggers have different Types
+
+```cpp
+using Trigger = std::variant<InputTrigger, TimedTrigger>;
+using Condition = std::function<bool(const core::ActiveState&)>;
+```
+
+---
+# Now for the Syntactic Sugar
+
+```cpp
+template<typename T>
+class TriggerBuilder
+{
+public:
+  template<typename ...Types>
+  TriggerBuilder(Types&& ... args);
+
+  [[nodiscard]] TriggerBuilder& aslong_as(const Condition& requirement) 
+  { 
+    to_build.execution_condition = requirement; 
+    return *this;
+  }
+  
+  [[nodiscard]] TriggerInfo generate_event(const core::Event& event) 
+  { 
+    to_build.generated_event = event;
+    return to_build;
+  }
+
+private:
+  TriggerInfo to_build;
+};
+
+using Every = TriggerBuilder<TimedTrigger>;
+using OnPhrase = TriggerBuilder<InputTrigger>;
+```
+
+---
+
+# And it compiles!
+
+```cpp
+TEST(Triggers, Trigger_system_should_only_generate_events_from_triggers_whose_conditions_are_met)
+{
+    auto trigger_system = EventFactory();
+    auto state = core::ActiveState();
+
+    trigger_system.add_trigger(`Every(1000ms).aslong_as(is_alive(Orc)).generate_event(DealDamageEvent{.source = Orc, .target = Player, .damage = 2})`);
+    trigger_system.add_trigger(`Every(1000ms).generate_event(DealDamageEvent{ .source = Dragon, .target = Player, .damage = 3 })`);
+    trigger_system.add_trigger(`OnPhrase("Attack Orc"sv).aslong_as(game_is_running).generate_event(DealDamageEvent{ .source = Player, .target = Orc, .damage = 2 })`);
+
+    trigger_system.execute(state, 1000ms);
+
+    EXPECT_FALSE(state.current_events.empty());
+}
+```
+--
+Though it fails...
+
+--
+
+Right we forgot the implementation - lets fix that.
+
+---
+
+# The implementation - Triggers.cpp
+
+```cpp
+namespace
+{
+	template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
+	template<class... Ts> overloaded(Ts...)->overloaded<Ts...>; // should not needed as of C++20 but for me it still is in VS2019
+}
+
+void triggers::EventFactory::execute(core::ActiveState& state, const std::chrono::milliseconds elapsed_time)
+{
+	for (auto trigger_info : triggers)
+	{
+		if (!trigger_info.execution_condition || trigger_info.execution_condition(state)) // Trigger has no condition or condition is true.
+		{
+			std::visit(overloaded{
+				[&state, &trigger_info](InputTrigger trigger) 
+				{ 
+					if (trigger.executes(state)) 
+						state.current_events.push_back(trigger_info.generated_event); 
+				},
+				[elapsed_time, &state, &trigger_info](TimedTrigger& trigger) 
+				{ 
+					if (trigger.executes(elapsed_time)) 
+						state.current_events.push_back(trigger_info.generated_event); 
+				}
+			}, trigger_info.trigger);
+		}
+	}
+}
+```
+
+---
+#It works!
+
+--
+Prove it!
+
+--
+
+Looks complicated? - Software Engineering really is all about managing Complexity
+
+.center[![Entertainment](./slides.png)]
+
+
+    </textarea>
+    <script src="https://remarkjs.com/downloads/remark-latest.min.js">
+    </script>
+    <script>
+      var slideshow = remark.create(
+        {
+          highlightSpans: true
+        }
+      );
+    </script>
+  </body>
+</html>
