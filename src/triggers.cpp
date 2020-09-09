@@ -12,12 +12,12 @@ void triggers::EventFactory::execute(core::GameState& state, const std::chrono::
 				[&state, &trigger_info](InputTrigger trigger) 
 				{ 
 					if (trigger.executes(state)) 
-						state.current_events.push_back(trigger_info.generated_event); 
+						state.future_events.push_back(trigger_info.generated_event); 
 				},
 				[elapsed_time, &state, &trigger_info](TimedTrigger& trigger) 
 				{ 
 					if (trigger.executes(elapsed_time)) 
-						state.current_events.push_back(trigger_info.generated_event); 
+						state.future_events.push_back(trigger_info.generated_event);
 				}
 			}, trigger_info.trigger);
 		}

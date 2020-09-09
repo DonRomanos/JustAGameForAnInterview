@@ -12,7 +12,7 @@ namespace utility
 	/*****************************************************************/
 	[[nodiscard]] constexpr auto is_alive(const core::EntityNames name)
 	{
-		return [name](const core::GameState& state) noexcept { return state.entities[static_cast<int>(name)].health > 0; };
+		return [name](const core::GameState& state) noexcept { return state.entities[name].health > 0; };
 	}
 
 	[[nodiscard]] constexpr bool game_is_running(const core::GameState& state) noexcept

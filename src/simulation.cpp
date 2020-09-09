@@ -19,24 +19,48 @@ namespace
 		return !utility::is_alive(core::EntityNames::Player)(state);
 	}
 
-	[[nodiscard]] auto event_handler(core::GameState& state)
+	[[nodiscard]] constexpr auto handle_damage_event(core::GameState& state) noexcept
 	{
-		return utility::overloaded{
-			[&state](const core::DealDamageEvent& event) {
-				state.entities[static_cast<int>(event.target)].health -= event.damage;
-				if (areAllMonstersDead(state)) { state.current_events.push_back(core::GameShapeChangeEvent{ .new_shape = core::GameShape::Won }); }
-				else if(isPlayerDead(state)) { state.current_events.push_back(core::GameShapeChangeEvent{ .new_shape = core::GameShape::Lost }); };
-				},
-			[&state](const core::GameShapeChangeEvent& event) {
-			if (event.new_shape == core::GameShape::Restart) state = utility::create_default_state(); } 
+		return [&state](const core::DealDamageEvent& damageEvent)
+		{
+			state.entities[damageEvent.target].health -= damageEvent.damage;
+			if (areAllMonstersDead(state))
+			{
+				state.future_shape = core::GameShape::Won; // Player wins even if he dies simultaneously 
+			}
+			else if (isPlayerDead(state))
+			{
+				state.future_shape = core::GameShape::Lost;
 			};
+		};
 	}
+
+	constexpr void advance_game_state(core::GameState& state) noexcept
+	{
+		switch (state.shape)
+		{
+		case core::GameShape::Won:
+			[[fallthrough]];
+		case core::GameShape::Lost:
+			state.future_shape = core::GameShape::Restart;
+			break;
+		case core::GameShape::Restart:
+			state = utility::create_default_state();
+			state.future_shape = core::GameShape::Running;
+			break;
+		case core::GameShape::Running:
+			break;
+		}
+	}
+
 }
 
 void simulation::EventHandler::execute(core::GameState& current_state)
 {
+	advance_game_state(current_state);
+
 	for (const auto& event : current_state.current_events)
 	{
-		std::visit(event_handler(current_state), event);
+		std::visit(handle_damage_event(current_state), event); 
 	}
 }

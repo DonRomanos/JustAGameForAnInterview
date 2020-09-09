@@ -37,24 +37,25 @@ namespace
 
 	[[nodiscard]] std::string render_damage(const core::EntityContainer& entities, const core::DealDamageEvent& event)
 	{
-		if (entities[static_cast<int>(event.target)].health <= 0)
+		if (entities[event.target].health <= 0)
 		{
-			return entities[static_cast<int>(event.source)].name + " killed " + entities[static_cast<int>(event.target)].name;
+			return entities[event.source].name + " killed " + entities[event.target].name;
 		}
 		else
 		{
-			return entities[static_cast<int>(event.source)].name + " damaged " + entities[static_cast<int>(event.target)].name
+			return entities[event.source].name + " damaged " + entities[event.target].name
 				+ " for " + std::to_string(event.damage) + " health";
 		}
 	}
 
-	[[nodiscard]] std::string render_gamestate(const core::GameShapeChangeEvent event)
+	[[nodiscard]] std::string render_gamestate(const core::GameShape state)
 	{
-		switch (event.new_shape)
+		switch (state)
 		{
 			case core::GameShape::Restart: return starting_text();
 			case core::GameShape::Won: return congratulations();
 			case core::GameShape::Lost: return shame();
+			case core::GameShape::Running: [[fallthrough]];
 			default: return "";
 		}
 	}
@@ -68,20 +69,19 @@ void output::Renderer::execute(core::GameState& game)
 {
 	using namespace std::literals;
 
-	std::string event_output = "";
+	std::string to_render_from_system = "";
 	for (const auto& event : game.current_events)
 	{
-		event_output += std::visit(utility::overloaded{
-			[&entities = game.entities] (const core::DealDamageEvent& event){ return render_damage(entities, event); },
-			[](const core::GameShapeChangeEvent event) {return render_gamestate(event); }
-			}, event) + "\n"s;
+		to_render_from_system += std::visit([&entities = game.entities](const core::DealDamageEvent& event)
+			{ return render_damage(entities, event); }, event) + "\n"s;
 	}
 
-	
-	if (!event_output.empty())
+	to_render_from_system = render_gamestate(game.shape);
+
+	if (!to_render_from_system.empty())
 	{
 		input_rendered_so_far.clear();
-		sink << "\r" << std::string(100, ' ') << '\r' << event_output;
+		sink << "\r" << std::string(100, ' ') << '\r' << to_render_from_system;
 	}
 
 	sink << game.current_input.substr(input_rendered_so_far.size(), game.current_input.size() - input_rendered_so_far.size());

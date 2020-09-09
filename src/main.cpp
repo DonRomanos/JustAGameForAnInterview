@@ -40,7 +40,8 @@ int main(/*int argc, char** argv*/)
     auto elapsed_time = time_since_last_update();
     while (true)
     {
-        game.current_events.clear();
+        std::swap(game.current_events, game.future_events);
+        game.future_events.clear();
 
         elapsed_time = time_since_last_update();
         game.current_input += input_provider.query_pending_input();
