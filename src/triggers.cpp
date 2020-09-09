@@ -16,6 +16,11 @@ void triggers::EventFactory::execute(core::GameState& state, const std::chrono::
 				},
 				[elapsed_time, &state, &trigger_info](TimedTrigger& trigger) 
 				{ 
+					// TimedTriggers only execute when the game is actually running.
+					if (!utility::game_is_running(state))
+					{
+						return;
+					}
 					if (trigger.executes(elapsed_time)) 
 						state.future_events.push_back(trigger_info.generated_event);
 				}

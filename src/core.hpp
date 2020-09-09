@@ -17,14 +17,12 @@ namespace core
 		Restart
 	};
 
-	// TODO replace with proper types so no need for static_cast constexpr structs?
 	enum class EntityNames
 	{
 		Orc = 0,
 		Dragon = 1,
 		Player = 2
 	};
-
 	constexpr std::size_t NumberOfEntities = 3;
 
 	struct Entity
@@ -33,6 +31,7 @@ namespace core
 		std::string name;
 	};
 
+	// Necessary so we do not have to static cast everywhere.
 	template<std::size_t Size>
 	class EntityArray : public std::array<Entity, Size>
 	{
@@ -49,12 +48,13 @@ namespace core
 		int damage;
 	};
 
-	struct GameShapeChangeEvent
+	struct KillEvent
 	{
-		GameShape new_shape;
+		EntityNames killer;
+		EntityNames victim;
 	};
 
-	using Event = std::variant<DealDamageEvent>;  // this currently holds only one event but is prepared to be extended.
+	using Event = std::variant<DealDamageEvent, KillEvent>;  // this currently holds only one event but is prepared to be extended.
 	using EntityContainer = EntityArray<NumberOfEntities>;
 
 	struct GameState

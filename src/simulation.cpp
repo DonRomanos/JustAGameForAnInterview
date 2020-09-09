@@ -23,15 +23,30 @@ namespace
 	{
 		return [&state](const core::DealDamageEvent& damageEvent)
 		{
-			state.entities[damageEvent.target].health -= damageEvent.damage;
-			if (areAllMonstersDead(state))
+			if (state.entities[damageEvent.target].health > damageEvent.damage)
 			{
-				state.future_shape = core::GameShape::Won; // Player wins even if he dies simultaneously 
+				state.entities[damageEvent.target].health -= damageEvent.damage;
 			}
-			else if (isPlayerDead(state))
+			else 
 			{
-				state.future_shape = core::GameShape::Lost;
-			};
+				state.entities[damageEvent.target].health = 0;
+				state.current_events.emplace_back(core::KillEvent{ .killer{damageEvent.source}, .victim{damageEvent.target} });
+			}
+		};
+	}
+
+	[[nodiscard]] constexpr auto handle_kill_event(core::GameState& game) noexcept
+	{
+		return [&game](const core::KillEvent& event)
+		{
+			if (event.victim == core::EntityNames::Player)
+			{
+				game.future_shape = core::GameShape::Lost;
+			}
+			else if (areAllMonstersDead(game))
+			{
+				game.future_shape = core::GameShape::Won; // Player loses even if he kills all monsters simultaneously.
+			}
 		};
 	}
 
@@ -55,12 +70,12 @@ namespace
 
 }
 
-void simulation::EventHandler::execute(core::GameState& current_state)
+void simulation::EventHandler::execute(core::GameState& game)
 {
-	advance_game_state(current_state);
+	advance_game_state(game);
 
-	for (const auto& event : current_state.current_events)
+	for (const auto& event : game.current_events)
 	{
-		std::visit(handle_damage_event(current_state), event); 
+		std::visit(utility::overloaded{ handle_damage_event(game), handle_kill_event(game) }, event);
 	}
 }

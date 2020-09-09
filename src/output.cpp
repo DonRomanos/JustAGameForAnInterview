@@ -37,15 +37,13 @@ namespace
 
 	[[nodiscard]] std::string render_damage(const core::EntityContainer& entities, const core::DealDamageEvent& event)
 	{
-		if (entities[event.target].health <= 0)
-		{
-			return entities[event.source].name + " killed " + entities[event.target].name;
-		}
-		else
-		{
-			return entities[event.source].name + " damaged " + entities[event.target].name
+		return entities[event.source].name + " damaged " + entities[event.target].name
 				+ " for " + std::to_string(event.damage) + " health";
-		}
+	}
+
+	[[nodiscard]] std::string render_kill(const core::EntityContainer& entities, const core::KillEvent& event)
+	{
+		return entities[event.killer].name + " killed " + entities[event.victim].name;
 	}
 
 	[[nodiscard]] std::string render_gamestate(const core::GameShape state)
@@ -72,11 +70,13 @@ void output::Renderer::execute(core::GameState& game)
 	std::string to_render_from_system = "";
 	for (const auto& event : game.current_events)
 	{
-		to_render_from_system += std::visit([&entities = game.entities](const core::DealDamageEvent& event)
-			{ return render_damage(entities, event); }, event) + "\n"s;
+		to_render_from_system += std::visit(utility::overloaded{
+			[&entities = game.entities] (const core::DealDamageEvent& event){ return render_damage(entities, event); },
+			[&entities = game.entities] (const core::KillEvent& event) { return render_kill(entities, event); }
+			}, event) + "\n"s;
 	}
 
-	to_render_from_system = render_gamestate(game.shape);
+	to_render_from_system += render_gamestate(game.shape);
 
 	if (!to_render_from_system.empty())
 	{

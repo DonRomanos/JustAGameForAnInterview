@@ -43,6 +43,8 @@ int main(/*int argc, char** argv*/)
         std::swap(game.current_events, game.future_events);
         game.future_events.clear();
 
+        std::swap(game.shape, game.future_shape);
+
         elapsed_time = time_since_last_update();
         game.current_input += input_provider.query_pending_input();
 
