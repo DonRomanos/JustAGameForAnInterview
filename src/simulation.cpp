@@ -19,25 +19,24 @@ namespace
 		return !utility::is_alive(core::EntityNames::Player)(state);
 	}
 
-	[[nodiscard]] constexpr auto handle_damage_event(core::GameState& state) noexcept
+	struct HandleEvents
 	{
-		return [&state](const core::DealDamageEvent& damageEvent)
-		{
-			if (state.entities[damageEvent.target].health > damageEvent.damage)
-			{
-				state.entities[damageEvent.target].health -= damageEvent.damage;
-			}
-			else 
-			{
-				state.entities[damageEvent.target].health = 0;
-				state.current_events.emplace_back(core::KillEvent{ .killer{damageEvent.source}, .victim{damageEvent.target} });
-			}
-		};
-	}
+		HandleEvents(core::GameState& game) : game(game) {};
 
-	[[nodiscard]] constexpr auto handle_kill_event(core::GameState& game) noexcept
-	{
-		return [&game](const core::KillEvent& event)
+		[[nodiscard]] constexpr void operator()(const core::DealDamageEvent& damageEvent) noexcept
+		{
+			if (game.entities[damageEvent.target].health > damageEvent.damage)
+			{
+				game.entities[damageEvent.target].health -= damageEvent.damage;
+			}
+			else if(game.entities[damageEvent.target].health > 0) // prevents "double" killing if events happen synchronously
+			{
+				game.entities[damageEvent.target].health = 0;
+				game.future_events.emplace_back(core::KillEvent{ .killer{damageEvent.source}, .victim{damageEvent.target} });
+			}
+		}
+
+		[[nodiscard]] constexpr void operator()(const core::KillEvent& event) noexcept
 		{
 			if (event.victim == core::EntityNames::Player)
 			{
@@ -47,8 +46,10 @@ namespace
 			{
 				game.future_shape = core::GameShape::Won; // Player loses even if he kills all monsters simultaneously.
 			}
-		};
-	}
+		}
+
+		core::GameState& game;
+	};
 
 	constexpr void advance_game_state(core::GameState& state) noexcept
 	{
@@ -76,6 +77,6 @@ void simulation::EventHandler::execute(core::GameState& game)
 
 	for (const auto& event : game.current_events)
 	{
-		std::visit(utility::overloaded{ handle_damage_event(game), handle_kill_event(game) }, event);
+		std::visit(HandleEvents{ game }, event);
 	}
 }
