@@ -54,13 +54,13 @@ namespace core
 		EntityNames victim;
 	};
 
-	using Event = std::variant<DealDamageEvent, KillEvent>;  // this currently holds only one event but is prepared to be extended.
+	using Event = std::variant<DealDamageEvent, KillEvent>;
 	using EntityContainer = EntityArray<NumberOfEntities>;
 
 	struct GameState
 	{
 		EntityContainer entities;
-		std::string current_input; // We need to keep track of the state in order to solve the   
+		std::string current_input; // We need to keep track of the state in order to solve the scrambled input problem!  
 
 		// double buffering just like rendering engines do ;)
 		std::vector<Event> current_events;
