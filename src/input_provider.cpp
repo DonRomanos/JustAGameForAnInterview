@@ -9,14 +9,33 @@
 
 namespace
 {
-	std::optional<char> to_char(int symbol)
+	std::optional<unsigned char> to_char(int symbol)
 	{
+		// arrow keys with conio consist of 2 characters we want to ignore them both.
+		static bool ignore_next = false;
+		if (ignore_next)
+		{
+			ignore_next = false;
+			return std::nullopt;
+		}
+
+		constexpr unsigned char is_arrow_key = 224;
 		switch (symbol)
 		{
 			case '\r': return '\n';         // on windows enter is recognized as \r instead of \n
-			case '\b': return std::nullopt; // dont want to allow backspace
+			case '\b': return std::nullopt; // dont want to allow backspace a the moment!
+			case is_arrow_key:
+			{
+				ignore_next = true;
+				return std::nullopt;
+			}
 		}
-		return static_cast<char>(symbol);
+
+		constexpr int ASCII_normal_symbols_begin = 32;
+		constexpr int ASCII_normal_symbols_end = 126;
+		symbol = std::clamp(symbol, ASCII_normal_symbols_begin, ASCII_normal_symbols_end);
+
+		return static_cast<unsigned char>(symbol);
 	}
 }
 

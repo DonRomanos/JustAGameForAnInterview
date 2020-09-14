@@ -42,10 +42,9 @@ int main(/*int argc, char** argv*/)
     trigger_system.add_trigger(Every(1400ms).aslong_as(is_alive(EntityNames::Orc)).generate_event(DealDamageEvent{ .source = EntityNames::Orc, .target = EntityNames::Player, .damage = 2 }));
     trigger_system.add_trigger(Every(2200ms).aslong_as(is_alive(EntityNames::Dragon)).generate_event(DealDamageEvent{ .source = EntityNames::Dragon, .target = EntityNames::Player, .damage = 3 }));
     
-    // TODO fix triggers that you can damage dead entities.
-    trigger_system.add_trigger(OnPhrase("attack orc", input_provider).aslong_as(is_alive(EntityNames::Player)).generate_event(DealDamageEvent{ .source = EntityNames::Player, .target = EntityNames::Orc, .damage = 2 }));
-    trigger_system.add_trigger(OnPhrase("attack dragon", input_provider).aslong_as(is_alive(EntityNames::Player)).generate_event(DealDamageEvent{ .source = EntityNames::Player, .target = EntityNames::Dragon, .damage = 2 }));
-
+    //Still one Issue left: Prevent rendering of damage events that did not deal damage. --- seems like my approach is flawed here since there is not an absolutely easy way to fix this :p ---
+    trigger_system.add_trigger(OnPhrase("attack orc", input_provider).aslong_as(all_of(is_alive(EntityNames::Player), is_alive(EntityNames::Orc))).generate_event(DealDamageEvent{ .source = EntityNames::Player, .target = EntityNames::Orc, .damage = 2 }));
+    trigger_system.add_trigger(OnPhrase("attack dragon", input_provider).aslong_as(all_of(is_alive(EntityNames::Player), is_alive(EntityNames::Dragon))).generate_event(DealDamageEvent{ .source = EntityNames::Player, .target = EntityNames::Dragon, .damage = 2 }));
 
     core::GameState game = utility::create_default_state();
     auto elapsed_time = time_since_last_update();

@@ -8,8 +8,10 @@
 #include <chrono>
 #include <optional>
 #include <string_view>
-#include <functional>
 #include <concepts>
+#include <type_traits>
+#include <utility>
+#include <functional>
 
 namespace input
 {
@@ -36,6 +38,7 @@ namespace triggers
 		TimedTrigger(const std::chrono::milliseconds cycle, const std::chrono::milliseconds counter);
 
 		bool executes(const std::chrono::milliseconds elapsed_time);
+		void reset_counter();
 	private:
 		std::chrono::milliseconds cycle_duration;
 		std::chrono::milliseconds counter;
@@ -45,16 +48,23 @@ namespace triggers
 	using Trigger = std::variant<InputTrigger, TimedTrigger>;
 	using Condition = std::function<bool(const core::GameState&)>;
 
+	//template<typename T>
+	//concept TriggerCondition = std::is_invocable_r<bool, const core::GameState&>::value;
+
+	// Somehow I could not make it work directly with the above maybe I dont yet understand enough about concepts.
 	template<typename T>
-	concept TriggerCondition = std::is_invocable_r<bool, const core::GameState&>::value;
+	concept TriggerCondition = requires(T&& f, const core::GameState& arg)
+	{
+		{std::invoke(std::forward<T>(f), arg)} -> std::convertible_to<bool>;
+	};
 
 	template<TriggerCondition ...Args>
 	auto all_of(Args ...args)
 	{
-		return	[... args = std::forward<Args>(args)](const core::GameState& state)
-				{
-					return (... && args(state));
-				}
+		return[... args = std::forward<Args>(args)](const core::GameState& state)
+		{
+			return (... && args(state));
+		};
 	}
 
 	template<TriggerCondition ...Args>
@@ -63,7 +73,7 @@ namespace triggers
 		return[... args = std::forward<Args>(args)](const core::GameState& state)
 		{
 			return (... || args(state));
-		}
+		};
 	}
 
 	/************************************************************/
@@ -119,4 +129,3 @@ namespace triggers
 	{
 	}
 }
-

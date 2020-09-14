@@ -1,4 +1,5 @@
 #include "triggers.hpp"
+#include "triggers.hpp"
 #include "utility.hpp"
 #include "input_provider.hpp"
 
@@ -16,13 +17,15 @@ void triggers::EventFactory::execute(core::GameState& state, const std::chrono::
 				},
 				[elapsed_time, &state, &trigger_info](TimedTrigger& trigger) 
 				{ 
-					// TimedTriggers only execute when the game is actually running.
-					if (!utility::game_is_running(state))
+					if (state.shape == core::GameShape::Restart)
 					{
-						return;
+						trigger.reset_counter();
 					}
-					if (trigger.executes(elapsed_time)) 
+					// TimedTriggers only execute when the game is actually running.
+					else if (utility::game_is_running(state) && trigger.executes(elapsed_time))
+					{
 						state.future_events.push_back(trigger_info.generated_event);
+					}
 				}
 			}, trigger_info.trigger);
 		}
@@ -55,6 +58,12 @@ bool triggers::TimedTrigger::executes(const std::chrono::milliseconds elapsed_ti
 		return true;
 	}
 	return false;
+}
+
+void triggers::TimedTrigger::reset_counter()
+{
+	using namespace std::chrono_literals;
+	counter = 0ms;
 }
 
 triggers::InputTrigger::InputTrigger(std::string_view phrase, input::ProviderI& in)
