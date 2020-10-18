@@ -1,7 +1,5 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-<a href="https://travis-ci.com/DonRomanos/JustAGameForAnInterview">![Build Status:](https://travis-ci.com/DonRomanos/JustAGameForAnInterview.svg?label=linux/osx)</a>
-<a href="https://ci.appveyor.com/project/DonRomanos/JustAGameForAnInterview" target="_blank">![Build Status:](https://ci.appveyor.com/api/projects/status/github/donromanos/JustAGameForAnInterview?svg=true&label=windows)</a>
-[![codecov](https://codecov.io/gh/donromanos/JustAGameForAnInterview/branch/master/graph/badge.svg)](https://codecov.io/gh/donromanos/JustAGameForAnInterview/)
+<a href="https://travis-ci.com/DonRomanos/JustAGameForAnInterview">
 
 # A Simple Console Game for a Job Interview
 
@@ -87,3 +85,27 @@ These are the main points.
 
 Time spent: 3-4 hours
 
+### A Refactoring Approach
+
+The downsides, especially the ifs did not let go of me and I was supposed to give a presentation anyway about these topics, so I decided to do a presentation about refactoring my small game example. I started of nicely with a syntax that I wanted and decided to solve the issue by introducing another Level of abstraction.
+
+I started of nicely but in the process I got lost, did not add tests and now its a bit of a mess, does not compile on linux currently and has few other issues.
+
+However I did manage to fix a few things and created a nice separation between my systems. The problem I have now is the interaction of those systems. More precise the Output will react to certain events, like damage. Even if the game is already won it will create and show such events. This is more difficult to fix because the systems only communicate through the events.
+
+Things that are currently open:
+
+1. Fix compilation on Linux
+2. Fix the unit tests at the moment they wont run
+3. Add some proper Unit Tests at least for the requirements
+4. Use Github actions instead of appveyor and travis
+5. Fix the open bug regarding the output (see above)
+6. Allow use of backspace
+
+### Learnings
+
+* Communication between separate entities / systems is a problem and should be thought of carefully
+* Its impossible to plan everything from the beginning on
+* Every Architecture decision has its drawbacks
+* Hiding complexity away so that things that are mirror requirements are easy to do and straightforward to see is a good thing
+* Stick to TDD it always comes back to bite you if you don't
